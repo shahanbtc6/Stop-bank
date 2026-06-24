@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stralink - Matrix Rain</title>
+    <style>
+        /* تنظیمات پایه */
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            overflow: hidden;
+            height: 100vh;
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* تنظیم بوم (Canvas) برای باران کدها */
+        #matrix-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1; /* در پس‌زمینه باشد */
+        }
+
+        /* باکس متن و افکت تایپ */
+        .text-wrapper {
+            position: relative;
+            z-index: 2; /* روی باران کدها باشد */
+            text-align: center;
+            max-width: 800px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.6); /* کمی تاریک برای خوانایی بهتر */
+            border-radius: 10px;
+            box-shadow: 0 0 50px rgba(0, 255, 0, 0.2);
+        }
+
+        /* تیتر اصلی Stralink */
+        .header-title {
+            font-size: 5rem;
+            font-weight: bold;
+            letter-spacing: 15px;
+            color: #fff;
+            text-shadow: 0 0 20px #00ff00, 0 0 40px #00ff00, 0 0 80px #00ff00;
+            margin-bottom: 30px;
+            font-family: 'Times New Roman', Times, serif;
+        }
+
+        /* استایل متن در حال تایپ */
+        #typing-text {
+            font-size: 1.5rem;
+            color: #00ff00;
+            text-shadow: 0 0 10px #00ff00;
+            line-height: 1.8;
+            min-height: 150px; /* جلوگیری از تغییر سایز صفحه هنگام تایپ */
+        }
+
+        /* مکان‌نما (کرسر) چشمک‌زن */
+        .cursor {
+            display: inline-block;
+            width: 10px;
+            height: 1.2rem;
+            background-color: #00ff00;
+            margin-left: 5px;
+            animation: blink 1s step-end infinite;
+            vertical-align: text-bottom;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        /* واکنش‌گرا برای آی‌پد و موبایل */
+        @media (max-width: 768px) {
+            .header-title { font-size: 3rem; letter-spacing: 5px; }
+            #typing-text { font-size: 1.2rem; padding: 0 10px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- بوم (Canvas) برای باران کدهای ۰ و ۱ -->
+    <canvas id="matrix-canvas"></canvas>
+
+    <!-- محتوای متنی روی صفحه -->
+    <div class="text-wrapper">
+        <div class="header-title">STRALINK</div>
+        <div id="typing-text">
+            <span class="cursor"></span>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // بخش ۱: باران کدهای ماتریکس (Canvas)
+        // ==========================================
+        const canvas = document.getElementById('matrix-canvas');
+        const ctx = canvas.getContext('2d');
+
+        // تنظیم سایز کانواس متناسب با صفحه
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        // کاراکترهای باران (فقط ۰ و ۱)
+        const matrix = "01";
+        const matrixArray = matrix.split("");
+
+        // تنظیمات فونت و ستون‌ها
+        const fontSize = 20;
+        const columns = canvas.width / fontSize;
+        const drops = [];
+
+        // مقداردهی اولیه ستون‌ها (مختصات Y)
+        for (let x = 0; x < columns; x++) {
+            drops[x] = 1; 
+        }
+
+        // تابع دراپ کردن کدها
+        function drawMatrix() {
+            // رنگ‌آمیزی پس‌زمینه با کمی شفافیت برای ایجاد اثر محو شوندگی
+            ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = "#0F0"; // رنگ سبز
+            ctx.font = fontSize + "px monospace";
+
+            // حلقه برای ریختن کاراکترها در ستون‌ها
+            for (let i = 0; i < drops.length; i++) {
+                const text = matrixArray[Math.floor(Math.random() * matrixArray.length)];
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+                // اگر به انتهای صفحه رسید یا به صورت رندوم ریست شود
+                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                    drops[i] = 0;
+                }
+                drops[i]++;
+            }
+        }
+
+        // حلقه انیمیشن (۶۰ فریم در ثانیه)
+        setInterval(drawMatrix, 35);
+
+        // به‌روزرسانی سایز کانواس در صورت تغییر سایز صفحه (در آی‌پد هنگام چرخش)
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+
+        // ==========================================
+        // بخش ۲: افکت تایپ شدن حروف (Typewriter)
+        // ==========================================
+        const textElement = document.getElementById('typing-text');
+        const cursorElement = document.querySelector('.cursor');
+        
+        // متن انگلیسی که باید تایپ شود
+        const textLines = [
+            "Restart the Economy",
+            "The first decentralized platform with physical infrastructure",
+            "Let's build the first people's bank"
+        ];
+
+        let lineIndex = 0;
+        let charIndex = 0;
+        let isDeleting = false;
+        const typeSpeed = 50; // سرعت تایپ (میلی‌ثانیه)
+
+        function typeEffect() {
+            const currentLine = textLines[lineIndex];
+            
+            if (isDeleting) {
+                // پاک کردن حروف
+                textElement.innerHTML = currentLine.substring(0, charIndex - 1) + '<span class="cursor"></span>';
+                charIndex--;
+            } else {
+                // تایپ کردن حروف
+                textElement.innerHTML = currentLine.substring(0, charIndex + 1) + '<span class="cursor"></span>';
+                charIndex++;
+            }
+
+            let delay = typeSpeed;
+
+            // اگر خط کامل تایپ شد، کمی صبر کن بعد برو خط بعد
+            if (!isDeleting && charIndex === currentLine.length) {
+                delay = 2000; // ۲ ثانیه مکث
+                isDeleting = true;
+            } 
+            // اگر خط کامل پاک شد، برو خط بعدی
+            else if (isDeleting && charIndex === 0) {
+                isDeleting = false;
+                lineIndex++;
+                // اگر به انتهای لیست رسیدیم، دوباره از اول شروع کن
+                if (lineIndex === textLines.length) {
+                    lineIndex = 0;
+                }
+                delay = 500;
+            }
+
+            setTimeout(typeEffect, delay);
+        }
+
+        // شروع انیمیشن تایپ بعد از بارگذاری کامل صفحه
+        window.onload = () => {
+            setTimeout(typeEffect, 1000);
+        };
+
+    </script>
+</body>
+</html>
